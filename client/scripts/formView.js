@@ -12,8 +12,8 @@ var FormView = {
 
 
     var message = {
-      username: App.username,
-      text: FormView.$form.find('#message').val(),
+      'username': App.username,
+      'text': FormView.$form.find('#message').val(),
       roomname: Rooms.selected || 'lobby'
     };
 

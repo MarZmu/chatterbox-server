@@ -11,7 +11,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-
+var fakeDatabase = [];
 const fs = require('fs');
 
 var defaultCorsHeaders = {
@@ -21,40 +21,30 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+
 var requestHandler = function (request, response) {
   //how were going to handle the request
   //declare variables for the request header (incoming information)
   var url = request.url;
   var path = request.path;
-  var statusCode = 200;
+
 
   //declare the variables for the response variable (outgoing information)
   var message = 'Hello Kitty!';
   var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'text/plain';
+  headers['Content-Type'] = 'application/json';
 
   //what type of method it is
   ////create a conditional statement for each
 
-  var fakeDatabase = [];
 
-  var stubMsg = {
-    username: 'Jono',
-    text: 'Do my bidding!'
-  };
-  fakeDatabase.push(stubMsg);
-  // fakeDatabase.push(stubMsg);
-  // console.log(`Serving ${ip} at ${port}, the request method is ${request.method} and the url is ${request.url}`);
 
   if (request.method === 'GET') {
-
-
-
     if (request.url === '/classes/messages') {
 
 
-      headers['Content-Type'] = 'application/json';
       response.writeHead(200, headers);
+
       response.end(JSON.stringify(fakeDatabase));
       return;
 
@@ -64,7 +54,7 @@ var requestHandler = function (request, response) {
       //if wrong path (FAIL)
       message = 'Error: Path Not Found';
       response.writeHead(404, headers);
-      response.end(JSON.stringify(message));
+      response.end(message);
       return;
     }
 
@@ -72,28 +62,30 @@ var requestHandler = function (request, response) {
 
 
   } else if (request.method === 'POST') {
-
     if (request.url === '/classes/messages') {
-      //
-      headers['Content-Type'] = 'application/json';
+
+      response.writeHead(201, headers);
+
       var data = '';
       request.on('data', chunk => { data += chunk; });
 
-      response.writeHead(201, headers);
-      fakeDatabase.push(data);
-      request.on('end', () => {
-        response.end(JSON.stringify(fakeDatabase));
-      });
 
+      request.on('end', () => {
+        let newData = JSON.parse(data);
+        fakeDatabase.push(newData);
+        response.end(JSON.stringify(newData));
+      });
       // appendFile('../chatterBoxData.txt',   )
       return;
 
     } else {
+
       //if wrong path (FAIL)
       message = 'Error: Path Not Found';
       response.writeHead(404, headers);
-      response.end(JSON.stringify(message));
+      response.end(message);
       return;
+
     }
 
   } else if (request.method === 'OPTIONS') {
@@ -106,6 +98,7 @@ var requestHandler = function (request, response) {
       message = 'Error: Path Not Found';
       response.writeHead(404, headers);
       response.end(message);
+      // fs.writeFileSync('names.txt', 'Shelby\nJaiden\nAlfredo')
       return;
     }
   }
@@ -114,8 +107,6 @@ var requestHandler = function (request, response) {
   response.end('Unknown url and method');
 
 
-
-  // console.log('Serving request type ' + request.method + ' for url ' + request.url + ' statusCode: ' + statusCode);
 };
 
 module.exports.requestHandler = requestHandler;
