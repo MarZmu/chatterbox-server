@@ -11,6 +11,9 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+
+const fs = require('fs');
+
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -23,83 +26,97 @@ var requestHandler = function (request, response) {
   //declare variables for the request header (incoming information)
   var url = request.url;
   var path = request.path;
-
+  var statusCode = 200;
 
   //declare the variables for the response variable (outgoing information)
   var message = 'Hello Kitty!';
-  var statusCode;
   var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'application/json';
+  headers['Content-Type'] = 'text/plain';
 
   //what type of method it is
   ////create a conditional statement for each
 
-  var testJSON = JSON.stringify([
-    {
-      username: 'bobby', message: 'HEYY whats up'
-    },
-    {
-      username: 'barbara', message: 'YOOOOO'
-    }
-  ]);
-  var ourPaths = ['/classes/messages'];
+  var fakeDatabase = [];
 
-  // console.log(testJSON, url, statusCode);
+  var stubMsg = {
+    username: 'Jono',
+    text: 'Do my bidding!'
+  };
+  fakeDatabase.push(stubMsg);
+  // fakeDatabase.push(stubMsg);
+  // console.log(`Serving ${ip} at ${port}, the request method is ${request.method} and the url is ${request.url}`);
 
-  //modify the variable values
   if (request.method === 'GET') {
-    // get retrives data
-    if (request.url.indexOf('classes/messages' !== -1)) {
-      //if matching path and method (success)
-      statusCode = 200;
+
+
+
+    if (request.url === '/classes/messages') {
+
+
       headers['Content-Type'] = 'application/json';
-      message = testJSON;
+      response.writeHead(200, headers);
+      response.end(JSON.stringify(fakeDatabase));
+      return;
+
     } else {
+
+
       //if wrong path (FAIL)
-      statusCode = 404;
       message = 'Error: Path Not Found';
+      response.writeHead(404, headers);
+      response.end(JSON.stringify(message));
+      return;
     }
-  } else if (request.method === 'POST') {
-    //if matching path and method (success)
-    if (request.url.indexOf('classes/messages' !== -1)) {
-      //identify path, and send the data there
 
-      statusCode = 201;
-      message = 'Your Post is Successful!';
+
+
+
+  } else if (request.method === 'POST') {
+
+    if (request.url === '/classes/messages') {
+
+      headers['Content-Type'] = 'application/json';
+
+      var data = '';
+      request.on('data', chunk => { data += chunk; });
+
+      response.writeHead(201, headers);
+      fakeDatabase.push(data);
+      request.on('end', () => {
+        response.end(JSON.stringify(fakeDatabase));
+      });
+
+      // appendFile('../chatterBoxData.txt',   )
+      return;
+
     } else {
       //if wrong path (FAIL)
-      statusCode = 404;
-      message = '2Error: Path Not Found';
+      message = 'Error: Path Not Found';
+      response.writeHead(404, headers);
+      response.end(JSON.stringify(message));
+      return;
     }
-  } else if (request.method === 'PUT') {
-    // Updates the data
-
-
-  } else if (request.method === 'DELETE') {
-    // Delete the data
 
   } else if (request.method === 'OPTIONS') {
-    // send back the methods we take
-    // or any other information about the server
-
+    if (request.url === '/classes/messages') {
+      headers['Allow'] = 'GET, POST, OPTIONS';
+      response.writeHead(200, headers);
+      return;
+    } else {
+      //if wrong path (FAIL)
+      message = 'Error: Path Not Found';
+      response.writeHead(404, headers);
+      response.end(message);
+      return;
+    }
   }
-
-  console.log('Serving request type ' + request.method + ' for url ' + request.url + statusCode);
-
-
-
-  // .writeHead() writes to the request line and headers of the response,
-  // which includes the status and all headers.
-
-  //combine those variables into a response
-  response.writeHead(statusCode, headers);
-
-  // console.log(testJSON, statusCode);
-  // Calling .end "flushes" the response's internal buffer, forcing
-  // node to actually send all the data over to the client.
-  response.end(message);
+  request.end();
+  response.writeHead(404, headers);
+  response.end('Unknown url and method');
 
 
+
+  // console.log('Serving request type ' + request.method + ' for url ' + request.url + ' statusCode: ' + statusCode);
 };
 
 module.exports.requestHandler = requestHandler;
