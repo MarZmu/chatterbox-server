@@ -74,9 +74,8 @@ var requestHandler = function (request, response) {
   } else if (request.method === 'POST') {
 
     if (request.url === '/classes/messages') {
-
+      //
       headers['Content-Type'] = 'application/json';
-
       var data = '';
       request.on('data', chunk => { data += chunk; });
 
