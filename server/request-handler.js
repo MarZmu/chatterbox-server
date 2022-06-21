@@ -1,18 +1,3 @@
-/*************************************************************
-
-You should implement your request handler function in this file.
-
-requestHandler is already getting passed to http.createServer()
-in basic-server.js, but it won't work as is.
-
-You'll have to figure out a way to export this function from
-this file and include it in basic-server.js so that it actually works.
-
-*Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
-
-**************************************************************/
-var fakeDatabase = [];
-const fs = require('fs');
 
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
@@ -21,92 +6,59 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
+var fakeData = [];
 
-var requestHandler = function (request, response) {
-  //how were going to handle the request
-  //declare variables for the request header (incoming information)
-  var url = request.url;
-  var path = request.path;
+var requestHandler = function(request, response) {
+  //request info
+  var type = request.method;
+  var path = request.url;
 
-
-  //declare the variables for the response variable (outgoing information)
-  var message = 'Hello Kitty!';
+  //response info
   var headers = defaultCorsHeaders;
-  headers['Content-Type'] = 'application/json';
+  headers['Content-Type'] = 'text/plain';
+  //Default status code is set up for Incorrct request info
+  var statusCode = 404;
+  var retBody = 'Error 404! Destination not found!';
 
-  //what type of method it is
-  ////create a conditional statement for each
+  console.log('Serving request type ' + type + ' for url ' + path);
 
-
-
-  if (request.method === 'GET') {
-    if (request.url === '/classes/messages') {
-
-
-      response.writeHead(200, headers);
-
-      response.end(JSON.stringify(fakeDatabase));
-      return;
-
-    } else {
-
-
-      //if wrong path (FAIL)
-      message = 'Error: Path Not Found';
-      response.writeHead(404, headers);
-      response.end(message);
-      return;
+  if (type === 'GET') {
+    if (path === '/classes/messages') {
+      //set content type to JSON, stat code to 200
+      statusCode = 200;
+      headers['Content-Type'] = 'application/json';
+      //change retVal to info (stringify first!)
+      retBody = JSON.stringify(fakeData);
     }
-
-
-
-
-  } else if (request.method === 'POST') {
-    if (request.url === '/classes/messages') {
-
-      response.writeHead(201, headers);
-
-      var data = '';
-      request.on('data', chunk => { data += chunk; });
-
-
+  } else if (type === 'POST') {
+    if (path === '/classes/messages') {
+      var incoming = '';
+      request.on('data', chunk => { incoming += chunk; });
       request.on('end', () => {
-        let newData = JSON.parse(data);
-        fakeDatabase.push(newData);
-        response.end(JSON.stringify(newData));
+        retBody = incoming;
+        statusCode = 201;
+        incoming = JSON.parse(incoming);
+        fakeData.push(incoming);
+        headers['Content-Type'] = 'application/json';
+        response.writeHead(statusCode, headers);
+        response.end(retBody);
       });
-      // appendFile('../chatterBoxData.txt',   )
-      return;
-
-    } else {
-
-      //if wrong path (FAIL)
-      message = 'Error: Path Not Found';
-      response.writeHead(404, headers);
-      response.end(message);
-      return;
-
-    }
-
-  } else if (request.method === 'OPTIONS') {
-    if (request.url === '/classes/messages') {
-      headers['Allow'] = 'GET, POST, OPTIONS';
-      response.writeHead(200, headers);
-      return;
-    } else {
-      //if wrong path (FAIL)
-      message = 'Error: Path Not Found';
-      response.writeHead(404, headers);
-      response.end(message);
-      // fs.writeFileSync('names.txt', 'Shelby\nJaiden\nAlfredo')
       return;
     }
+  } else if (type === 'PUT') {
+  } else if (type === 'DELETE') {
+  } else if (type === 'OPTIONS') {
+    statusCode = 200;
+    retBody = 'Allow: GET, POST, OPTIONS \nPaths: \'/classes/messages\'';
   }
-  request.end();
-  response.writeHead(404, headers);
-  response.end('Unknown url and method');
 
-
+  response.writeHead(statusCode, headers);
+  response.end(retBody);
 };
 
 module.exports.requestHandler = requestHandler;
+
+//on post - function on must use 'data' string for data event
+//          but variable to house data does not have to match
+//        - must house all actions including response/request
+//          end data within the request on end block
